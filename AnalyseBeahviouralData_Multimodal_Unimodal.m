@@ -5,27 +5,37 @@ clear all
 %First get the excel file containing the list of the data
 DatasetPath='C:\Users\stefa\Desktop\Stez - Work\Torino2021_Postdoc\Projects\MSCA_2023\Behaviour';
 % DatasetName='Dataset_Unimodal_Multimodal.xlsx';
-DatasetName='Dataset_Unimodal_Individual.xlsx';
+% DatasetName='Dataset_Unimodal_Individual.xlsx';
+% DatasetName='Dataset_Unimodal_Multimodal_NeutralOdor.xlsx';
+DatasetName='Dataset_Unimodal_Individual_DREADD.xlsx';
 DATATABLE = readtable(fullfile(DatasetPath,DatasetName));
 
 %Remove animals not to be included
 DATATABLE(DATATABLE.TOINCLUDE==0,:)=[];
-
-
 
 %Define the time intervals to be used for occupancy analysis
 Interval=60; %Define time in seconds
 MaxTime=600; %Define the maximum time
 TimeIntervals=0:Interval:MaxTime;
 FilterCycle=0; %Set at 1 if you want to filter dataset based on female estrous cycle
+FilterCondition=1; %Set at 1 if you want to filter based on treatment condition (i.e. with dreadd vs mcherry)
+Condition='MCHERRY'; %
+ToKeep='ESTRO';
+SelectNose=1; %Set at 1 if you want to use the nose point as centroid to evaluate time spent
 
-Include_Syllables=1; %Set at 1 if you want to analyse the songs of males and align with the behaviour. This is for experiments with individual as stimuli
+Include_Syllables=0; %Set at 1 if you want to analyse the songs of males and align with the behaviour. This is for experiments with individual as stimuli
 Audio_Duration=300; %Put here the time of the audio file used for Syllable detection (Set it equal for all animals)
 
 %Add the option to filter based on estrous stages
 if FilterCycle==1
-    ToKeep='ESTRO';
+%     ToKeep='ESTRO';
     DATATABLE=DATATABLE(strcmp(DATATABLE.CYCLE,ToKeep)==1,:);
+end
+
+%Add the option to filter based on estrous stages
+if FilterCondition==1
+%     ToKeep='ESTRO';
+    DATATABLE=DATATABLE(strcmp(DATATABLE.CONDITION,Condition)==1,:);
 end
 
 %Now we cycle across animals and we load the road data
@@ -54,6 +64,13 @@ for thisanimal=1:size(DATATABLE,1)
         Tracking=ttx.XCenter;
         Tracking(:,2)=ttx.YCenter;
         Speed=ttx.Velocity;
+        %In some cases the Tracking variable could be a cell instead of a
+        %matrix as there might be missing values at the beginning
+        if iscell(Tracking)
+            Tracking=str2double(Tracking);
+            Speed=str2double(Speed);
+        end
+        
 
         %Evaluate acquisition frequency
         dTime=diff(Time);
@@ -65,25 +82,48 @@ for thisanimal=1:size(DATATABLE,1)
         ii=find(isnan(Tracking(:,1))==1);
 
         %Now Check the position of Unimodal/Multimodal speaker
-        
-        if DATATABLE.UNIMODAL(thisanimal)==1
-            Unimodal=ttx.InZone_Speaker1_Center_point_;
-            Unimodal(:,2)=ttx.InZone_Speaker1_Zone_Center_point_;
 
-            Multimodal=ttx.InZone_Speaker2_Center_point_;
-            Multimodal(:,2)=ttx.InZone_Speaker2_Zone_Center_point_;
+        if DATATABLE.UNIMODAL(thisanimal)==1
+            if SelectNose==1
+                Unimodal=ttx.InZone_Speaker1_Nose_point_;
+                Unimodal(:,2)=ttx.InZone_Speaker1_Zone_Nose_point_;
+
+                Multimodal=ttx.InZone_Speaker2_Nose_point_;
+                Multimodal(:,2)=ttx.InZone_Speaker2_Zone_Nose_point_;
+
+            else
+
+                Unimodal=ttx.InZone_Speaker1_Center_point_;
+                Unimodal(:,2)=ttx.InZone_Speaker1_Zone_Center_point_;
+
+                Multimodal=ttx.InZone_Speaker2_Center_point_;
+                Multimodal(:,2)=ttx.InZone_Speaker2_Zone_Center_point_;
+            end
 
         else
-            Multimodal=ttx.InZone_Speaker1_Center_point_;
-            Multimodal(:,2)=ttx.InZone_Speaker1_Zone_Center_point_;
+            if SelectNose==1
+                Multimodal=ttx.InZone_Speaker1_Nose_point_;
+                Multimodal(:,2)=ttx.InZone_Speaker1_Zone_Nose_point_;
 
-            Unimodal=ttx.InZone_Speaker2_Center_point_;
-            Unimodal(:,2)=ttx.InZone_Speaker2_Zone_Center_point_;
+                Unimodal=ttx.InZone_Speaker2_Nose_point_;
+                Unimodal(:,2)=ttx.InZone_Speaker2_Zone_Nose_point_;
+            else
+                Multimodal=ttx.InZone_Speaker1_Center_point_;
+                Multimodal(:,2)=ttx.InZone_Speaker1_Zone_Center_point_;
+
+                Unimodal=ttx.InZone_Speaker2_Center_point_;
+                Unimodal(:,2)=ttx.InZone_Speaker2_Zone_Center_point_;
+            end
 
         end
+
+        if iscell(Multimodal)
+            Unimodal=str2double(Unimodal);
+            Multimodal=str2double(Multimodal);
+        end
         
-        Multimodal(ii,:)=0;
-        Unimodal(ii,:)=0;
+        Multimodal(ii,:)=0; Multimodal(isnan(Multimodal))=0;
+        Unimodal(ii,:)=0; Unimodal(isnan(Unimodal))=0;
 
         %Now calculate for each time interval the time spent in each zone
         TimeUnimodal=zeros(length(TimeIntervals),2);
@@ -361,22 +401,56 @@ end
 
 %% Split and plot data based on animal cycle
 %We do this only for one time interval
-TimeSlot=300;
+TimeSlot=600;
 TimeInterval_idx=max(find(TimeIntervals<TimeSlot));
+
+All_Animals_Multi=AllMultimodal_Zone_cumulative(:,TimeInterval_idx);
+All_Animals_Uni=AllUnimodal_Zone_cumulative(:,TimeInterval_idx);
+
+% All_Animals_Multi=AllMultimodal_cumulative(:,TimeInterval_idx);
+% All_Animals_Uni=AllUnimodal_cumulative(:,TimeInterval_idx);
 
 Estro_Multi=AllMultimodal_Zone_cumulative(strcmp(DATATABLE.CYCLE,'ESTRO'),TimeInterval_idx);
 Estro_Uni=AllUnimodal_Zone_cumulative(strcmp(DATATABLE.CYCLE,'ESTRO'),TimeInterval_idx);
+Estro_PrfIdx=PrefIndex_Zone_Cumulative(strcmp(DATATABLE.CYCLE,'ESTRO'),TimeInterval_idx);
 
 Diestro_Multi=AllMultimodal_Zone_cumulative(strcmp(DATATABLE.CYCLE,'DIESTRO'),TimeInterval_idx);
 Diestro_Uni=AllUnimodal_Zone_cumulative(strcmp(DATATABLE.CYCLE,'DIESTRO'),TimeInterval_idx);
+Diestro_PrfIdx=PrefIndex_Zone_Cumulative(strcmp(DATATABLE.CYCLE,'DIESTRO'),TimeInterval_idx);
 
 %Check if there is a significant difference
+pVal_All=signrank(All_Animals_Uni,All_Animals_Multi);
 pVal_Estro=signrank(Estro_Uni,Estro_Multi);
 pVal_Diestro=signrank(Diestro_Uni,Diestro_Multi);
+[pVal_PrefIndex_cycle,~]=ranksum(Estro_PrfIdx,Diestro_PrfIdx);
+
+
+plotMultimodal_Unimodal(All_Animals_Uni, All_Animals_Multi);
 
 plotMultimodal_Unimodal(Estro_Uni, Estro_Multi);
 
 plotMultimodal_Unimodal(Diestro_Uni,Diestro_Multi);
+
+%Plot for Preference Index Receptive vs NonReceptive
+figure("Position",[100 100 200 250])
+boxplot_scatter_2(Estro_PrfIdx,Diestro_PrfIdx)
+xticks([1 2]);
+xticklabels({'Receptive', 'Non-Receptive'});
+ylabel('Preference Index');
+ylim([-1 1])
+hold on
+plot([0 2.5],[0 0],'r-')
+
+set(gca,'FontName','Arial','FontSize',8,'LineWidth',1,'TickDir','out','Box','off')
+
+%Plot cumulative distribution
+figure("Position",[100 100 200 250])
+boundedline(TimeIntervals,mean(AllMultimodal_Zone_cumulative,1),nansem(AllMultimodal_Zone_cumulative,1),'m')
+hold on
+boundedline(TimeIntervals,mean(AllUnimodal_Zone_cumulative,1),nansem(AllUnimodal_Zone_cumulative,1),'k')
+xlim([0 540])
+xlabel('Total Time'); ylabel('Time Spent (s)')
+set(gca,'FontName','Arial','FontSize',8,'LineWidth',1,'TickDir','out','Box','off')
 
 %% Now, if exposed to individuals, evaluate the contribution of ultrasound vocalizations for preference
 
