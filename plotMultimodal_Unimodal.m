@@ -28,7 +28,7 @@ plot([1, 2], [mean_Unimodal, mean_Multimodal], 'k-', 'LineWidth', 1);
 
 % Customize plot
 xlim([0.5, 2.5]);
-ylim([0 200]);
+% ylim([0 200]);
 xticks([1 2]);
 xticklabels({'Unimodal', 'Multimodal'});
 ylabel('Time Spent (s)');
