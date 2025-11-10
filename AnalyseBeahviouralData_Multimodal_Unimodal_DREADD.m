@@ -7,15 +7,15 @@ DatasetPath='C:\Users\stefa\Desktop\Stez - Work\Torino2021_Postdoc\Projects\MSCA
 % DatasetName='Dataset_Unimodal_Multimodal.xlsx';
 % DatasetName='Dataset_Unimodal_Individual.xlsx';
 % DatasetName='Dataset_Unimodal_Multimodal_NeutralOdor.xlsx';
-% DatasetName='Dataset_Unimodal_Individual_DREADD.xlsx';
+DatasetName='Dataset_Unimodal_Individual_DREADD.xlsx';
 % DatasetName='Dataset_Unimodal_Multimodal_CAVcre_DREADD.xlsx';
-DatasetName='Dataset_Unimodal_Individual_CAVcre_DREADD.xlsx';
+% DatasetName='Dataset_Unimodal_Individual_CAVcre_DREADD.xlsx';
 % DatasetName='Dataset_SocialPreference_CAVcre_DREADD.xlsx';
 % DatasetName='Dataset_Unimodal_multimodal_DREADD.xlsx';
 DATATABLE = readtable(fullfile(DatasetPath,DatasetName));
 
 SavePath='C:\Users\stefa\Desktop\Stez - Work\Torino2021_Postdoc\Projects\MSCA_2023\Behaviour\Analysed';
-SaveFileName='CAVCre_DREADD_Multi_vs_Uni.mat';
+SaveFileName='DREADD_Multi_vs_Uni_20251027.mat';
 
 %Remove animals not to be included
 DATATABLE(DATATABLE.TOINCLUDE==0,:)=[];
@@ -171,7 +171,7 @@ for thisanimal=1:size(DATATABLE,1)
             %Now calculate the time spent in each zone
             TimeUnimodal(thistime,:)=sum(Unimodal(ttx,:),1)/AcquisitionFreq;
             TimeMultimodal(thistime,:)=sum(Multimodal(ttx,:),1)/AcquisitionFreq;
-            TimeZone1(thistime,:)=sum(Zone1(ttx,:),1)/AcquisitionFreq;
+%             TimeZone1(thistime,:)=sum(Zone1(ttx,:),1)/AcquisitionFreq;
 
         end
 
@@ -342,7 +342,6 @@ for thistime=1:length(TimeIntervals)
 end
 
 %Repeat for MCHERRY
-%Start with DREADD
 pVal_Time_MCHERRY=[];
 for thistime=1:length(TimeIntervals)
     %Big Area
@@ -392,6 +391,10 @@ for thisanimal=1:size(AllMultimodal,1)
 
 end
 
+PrefIndex(isnan(PrefIndex))=0;
+PrefIndex_Zone(isnan(PrefIndex_Zone))=0;
+PrefIndex_Cumulative(isnan(PrefIndex_Cumulative))=0;
+PrefIndex_Zone_Cumulative(isnan(PrefIndex_Zone_Cumulative))=0;
 %Evaluate statistical differences for preference index
 
 for thistime=1:length(TimeIntervals)-1
@@ -399,17 +402,24 @@ for thistime=1:length(TimeIntervals)-1
     pVal_PrefIndex_DREADD(thistime,1)=signrank(PrefIndex(DREADD_idx,thistime));
     pVal_PrefIndex_MCherry(thistime,1)=signrank(PrefIndex(MCHERRY_idx,thistime));
 
+    pVal_PrefIndex_MCherry_vs_DREADD(thistime,1)=ranksum(PrefIndex(DREADD_idx,thistime),PrefIndex(MCHERRY_idx,thistime));
+
     %Zone
     pVal_PrefIndex_DREADD(thistime,2)=signrank(PrefIndex_Zone(DREADD_idx,thistime));
     pVal_PrefIndex_MCherry(thistime,2)=signrank(PrefIndex_Zone(MCHERRY_idx,thistime));
+    pVal_PrefIndex_MCherry_vs_DREADD(thistime,2)=ranksum(PrefIndex_Zone(DREADD_idx,thistime),PrefIndex_Zone(MCHERRY_idx,thistime));
 
     %Cumulative Big Area
     pVal_PrefIndex_DREADD(thistime,3)=signrank(PrefIndex_Cumulative(DREADD_idx,thistime));
     pVal_PrefIndex_MCherry(thistime,3)=signrank(PrefIndex_Cumulative(MCHERRY_idx,thistime));
+    pVal_PrefIndex_MCherry_vs_DREADD(thistime,3)=ranksum(PrefIndex_Cumulative(DREADD_idx,thistime),PrefIndex_Cumulative(MCHERRY_idx,thistime));
+
 
     %Zone
     pVal_PrefIndex_DREADD(thistime,4)=signrank(PrefIndex_Zone_Cumulative(DREADD_idx,thistime));
     pVal_PrefIndex_MCherry(thistime,4)=signrank(PrefIndex_Zone_Cumulative(MCHERRY_idx,thistime));
+    pVal_PrefIndex_MCherry_vs_DREADD(thistime,4)=ranksum(PrefIndex_Zone_Cumulative(DREADD_idx,thistime),PrefIndex_Zone_Cumulative(MCHERRY_idx,thistime));
+
 
 end
 
@@ -433,26 +443,26 @@ title('Small Zone')
 
 
 subplot(2,6,3)
-boundedline(TimeIntervals,mean(AllMultimodal_cumulative(DREADD_idx,:),1),nansem(AllMultimodal_cumulative(DREADD_idx,:),1),'r','alpha')
+boundedline(TimeIntervals,mean(AllMultimodal_cumulative(DREADD_idx,:),1),nansem(AllMultimodal_cumulative(DREADD_idx,:),1),'r')
 hold on
-boundedline(TimeIntervals,mean(AllUnimodal_cumulative(DREADD_idx,:),1),nansem(AllUnimodal_cumulative(DREADD_idx,:),1),'k','alpha')
+boundedline(TimeIntervals,mean(AllUnimodal_cumulative(DREADD_idx,:),1),nansem(AllUnimodal_cumulative(DREADD_idx,:),1),'k')
 xlabel('Total Time'); ylabel('Cumulative Time Spent (s)')
 
 
 subplot(2,6,4)
-boundedline(TimeIntervals,mean(AllMultimodal_Zone_cumulative(DREADD_idx,:),1),nansem(AllMultimodal_Zone_cumulative(DREADD_idx,:),1),'m','alpha')
+boundedline(TimeIntervals,mean(AllMultimodal_Zone_cumulative(DREADD_idx,:),1),nansem(AllMultimodal_Zone_cumulative(DREADD_idx,:),1),'m')
 hold on
-boundedline(TimeIntervals,mean(AllUnimodal_Zone_cumulative(DREADD_idx,:),1),nansem(AllUnimodal_Zone_cumulative(DREADD_idx,:),1),'k','alpha')
+boundedline(TimeIntervals,mean(AllUnimodal_Zone_cumulative(DREADD_idx,:),1),nansem(AllUnimodal_Zone_cumulative(DREADD_idx,:),1),'k')
 xlabel('Total Time'); ylabel('Cumulative Time Spent (s)')
 
 subplot(2,6,4)
-boundedline(TimeIntervals,mean(AllMultimodal_Zone_cumulative(DREADD_idx,:),1),nansem(AllMultimodal_Zone_cumulative(DREADD_idx,:),1),'m','alpha')
+boundedline(TimeIntervals,mean(AllMultimodal_Zone_cumulative(DREADD_idx,:),1),nansem(AllMultimodal_Zone_cumulative(DREADD_idx,:),1),'m')
 hold on
-boundedline(TimeIntervals,mean(AllUnimodal_Zone_cumulative(DREADD_idx,:),1),nansem(AllUnimodal_Zone_cumulative(DREADD_idx,:),1),'k','alpha')
+boundedline(TimeIntervals,mean(AllUnimodal_Zone_cumulative(DREADD_idx,:),1),nansem(AllUnimodal_Zone_cumulative(DREADD_idx,:),1),'k')
 xlabel('Total Time'); ylabel('Cumulative Time Spent (s)')
 
 subplot(2,6,5);
-boundedline(TimeIntervals,nanmean(PrefIndex_Cumulative(DREADD_idx,:),1),nansem(PrefIndex_Cumulative(DREADD_idx,:),1),'r','alpha')
+boundedline(TimeIntervals,nanmean(PrefIndex_Cumulative(DREADD_idx,:),1),nansem(PrefIndex_Cumulative(DREADD_idx,:),1),'r')
 hold on
 plot([TimeIntervals(1) TimeIntervals(end)],[0 0],'k--')
 ylim([-1 1])
@@ -461,7 +471,7 @@ xlabel('Time Interval')
 title('Big Zone')
 
 subplot(2,6,6)
-boundedline(TimeIntervals,nanmean(PrefIndex_Zone_Cumulative(DREADD_idx,:),1),nansem(PrefIndex_Zone_Cumulative(DREADD_idx,:),1),'m','alpha')
+boundedline(TimeIntervals,nanmean(PrefIndex_Zone_Cumulative(DREADD_idx,:),1),nansem(PrefIndex_Zone_Cumulative(DREADD_idx,:),1),'m')
 hold on
 plot([TimeIntervals(1) TimeIntervals(end)],[0 0],'k--')
 ylim([-1 1])
@@ -487,20 +497,20 @@ title('Small Zone')
 
 
 subplot(2,6,9)
-boundedline(TimeIntervals,mean(AllMultimodal_cumulative(MCHERRY_idx,:),1),nansem(AllMultimodal_cumulative(MCHERRY_idx,:),1),'r','alpha')
+boundedline(TimeIntervals,mean(AllMultimodal_cumulative(MCHERRY_idx,:),1),nansem(AllMultimodal_cumulative(MCHERRY_idx,:),1),'r')
 hold on
-boundedline(TimeIntervals,mean(AllUnimodal_cumulative(MCHERRY_idx,:),1),nansem(AllUnimodal_cumulative(MCHERRY_idx,:),1),'k','alpha')
+boundedline(TimeIntervals,mean(AllUnimodal_cumulative(MCHERRY_idx,:),1),nansem(AllUnimodal_cumulative(MCHERRY_idx,:),1),'k')
 xlabel('Total Time'); ylabel('Cumulative Time Spent (s)')
 
 
 subplot(2,6,10)
-boundedline(TimeIntervals,mean(AllMultimodal_Zone_cumulative(MCHERRY_idx,:),1),nansem(AllMultimodal_Zone_cumulative(MCHERRY_idx,:),1),'m','alpha')
+boundedline(TimeIntervals,mean(AllMultimodal_Zone_cumulative(MCHERRY_idx,:),1),nansem(AllMultimodal_Zone_cumulative(MCHERRY_idx,:),1),'m')
 hold on
-boundedline(TimeIntervals,mean(AllUnimodal_Zone_cumulative(MCHERRY_idx,:),1),nansem(AllUnimodal_Zone_cumulative(MCHERRY_idx,:),1),'k','alpha')
+boundedline(TimeIntervals,mean(AllUnimodal_Zone_cumulative(MCHERRY_idx,:),1),nansem(AllUnimodal_Zone_cumulative(MCHERRY_idx,:),1),'k')
 xlabel('Total Time'); ylabel('Cumulative Time Spent (s)')
 
 subplot(2,6,11);
-boundedline(TimeIntervals,nanmean(PrefIndex_Cumulative(MCHERRY_idx,:),1),nansem(PrefIndex_Cumulative(MCHERRY_idx,:),1),'r','alpha')
+boundedline(TimeIntervals,nanmean(PrefIndex_Cumulative(MCHERRY_idx,:),1),nansem(PrefIndex_Cumulative(MCHERRY_idx,:),1),'r')
 hold on
 plot([TimeIntervals(1) TimeIntervals(end)],[0 0],'k--')
 ylim([-1 1])
@@ -509,7 +519,7 @@ xlabel('Time Interval')
 title('Big Zone')
 
 subplot(2,6,12)
-boundedline(TimeIntervals,nanmean(PrefIndex_Zone_Cumulative(MCHERRY_idx,:),1),nansem(PrefIndex_Zone_Cumulative(MCHERRY_idx,:),1),'m','alpha')
+boundedline(TimeIntervals,nanmean(PrefIndex_Zone_Cumulative(MCHERRY_idx,:),1),nansem(PrefIndex_Zone_Cumulative(MCHERRY_idx,:),1),'m')
 hold on
 plot([TimeIntervals(1) TimeIntervals(end)],[0 0],'k--')
 ylim([-1 1])
@@ -556,9 +566,14 @@ plotMultimodal_Unimodal(All_Animals_Uni_mCherry,All_Animals_Multi_mCherry);
 title('mCherry Arm');ylim([0 350])
 
 figure
+boxplot_scatter_2(All_Animals_Uni_mCherry,All_Animals_Multi_mCherry,All_Animals_Uni_Dreadd,All_Animals_Multi_Dreadd)
+
+figure
 boxplot_scatter_2(All_Animals_Uni_Zone_mCherry,All_Animals_Multi_Zone_mCherry,All_Animals_Uni_Zone_Dreadd,All_Animals_Multi_Zone_Dreadd)
 
 
+% 
+% 
 % 
 % for thistime=1:length(TimeIntervals)
 %     Var=[AllUnimodal_Zone_cumulative_MCHERRY(:,thistime);AllMultimodal_Zone_cumulative_MCHERRY(:,thistime);AllUnimodal_Zone_cumulative_DREADD(:,thistime);AllMultimodal_Zone_cumulative_DREADD(:,thistime)];
@@ -566,7 +581,7 @@ boxplot_scatter_2(All_Animals_Uni_Zone_mCherry,All_Animals_Multi_Zone_mCherry,Al
 %     [p(thistime),tbl,stats] = kruskalwallis(Var,groups);
 %     
 %     c{thistime}=multcompare(stats);
-% 
+
 % end
 % 
 % for thistime=1:length(TimeIntervals)
@@ -647,6 +662,62 @@ DataOutput.AllMultimodal_cumulative=AllUnimodal_Zone_cumulative;
 
 save(fullfile(SavePath,SaveFileName),'DataOutput');
 
+
+
+
+%% Check Frequency
+
+DREADDTable=DATATABLE(DREADD_idx,:);
+[pValFreq_DREADD,AllFreqUni_Zone_cum_D,AllFreqMul_Zone_cum_D,All_TimeSpent_Mean_D,All_TimeSpent_D]=EvaluateFrequency(DREADDTable,TimeIntervals);
+
+MCherryTable=DATATABLE(MCHERRY_idx,:);
+[pValFreq_mCherry,AllFreqUni_Zone_cum_M,AllFreqMul_Zone_cum_M,All_TimeSpent_Mean_M,All_TimeSpent_M]=EvaluateFrequency(MCherryTable,TimeIntervals);
+
+
+%% Plot Frequency Data
+
+%Plot cumulative distribution
+figure("Position",[100 100 200 250])
+boundedline(TimeIntervals(1:end-1),mean(AllFreqUni_Zone_cum_M,1),nansem(AllFreqUni_Zone_cum_M,1),'k')
+hold on
+boundedline(TimeIntervals(1:end-1),mean(AllFreqMul_Zone_cum_M,1),nansem(AllFreqMul_Zone_cum_M,1),'m')
+% xlim([0 540])
+ylim([0 30])
+xlabel('Total Time'); ylabel('# of visits')
+set(gca,'FontName','Arial','FontSize',8,'LineWidth',1,'TickDir','out','Box','off')
+
+%Plot cumulative distribution
+figure("Position",[100 100 200 250])
+boundedline(TimeIntervals(1:end-1),mean(AllFreqUni_Zone_cum_D,1),nansem(AllFreqUni_Zone_cum_D,1),'k')
+hold on
+boundedline(TimeIntervals(1:end-1),mean(AllFreqMul_Zone_cum_D,1),nansem(AllFreqMul_Zone_cum_D,1),'m')
+% xlim([0 540])
+ylim([0 30])
+xlabel('Total Time'); ylabel('# of visits')
+set(gca,'FontName','Arial','FontSize',8,'LineWidth',1,'TickDir','out','Box','off')
+
+TimeBin=1:1:100;
+
+figure
+subplot(2,1,1)
+histogram(cat(2,All_TimeSpent_M{:,1}),TimeBin,'FaceColor','k');
+hold on
+histogram(cat(2,All_TimeSpent_M{:,2}),TimeBin,'FaceColor','m');
+title('mCherry')
+
+subplot(2,1,2)
+histogram(cat(2,All_TimeSpent_D{:,1}),TimeBin,'FaceColor','k');
+hold on
+histogram(cat(2,All_TimeSpent_D{:,2}),TimeBin,'FaceColor','m');
+title('DREADD')
+
+figure
+subplot(211)
+boxplot_scatter_2(All_TimeSpent_Mean_M(:,1),All_TimeSpent_Mean_M(:,2))
+title('mCherry')
+
+subplot(212)
+boxplot_scatter_2(All_TimeSpent_Mean_D(:,1),All_TimeSpent_Mean_D(:,2))
 return
 
 %% Now look at the frequency (entering the zone) between Unimodal vs Multimodal

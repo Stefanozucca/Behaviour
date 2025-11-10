@@ -6,29 +6,29 @@ clear all
 DatasetPath='C:\Users\stefa\Desktop\Stez - Work\Torino2021_Postdoc\Projects\MSCA_2023\Behaviour';
 % DatasetName='Dataset_Unimodal_Multimodal.xlsx';
 % DatasetName='Dataset_Unimodal_Individual.xlsx';
-% DatasetName='Dataset_Unimodal_Multimodal_NeutralOdor.xlsx';
+DatasetName='Dataset_Unimodal_Multimodal_NeutralOdor.xlsx';
 % DatasetName='Dataset_Unimodal_Individual_DREADD.xlsx';
 % DatasetName='Dataset_Unimodal_Multimodal_CAVcre_DREADD.xlsx';
 % DatasetName='Dataset_Unimodal_Individual_CAVcre_DREADD.xlsx';
-DatasetName='Dataset_SocialPreference_CAVcre_DREADD.xlsx';
+% DatasetName='Dataset_SocialPreference_CAVcre_DREADD.xlsx';
 % DatasetName='Dataset_Unimodal_multimodal_DREADD.xlsx';
 DATATABLE = readtable(fullfile(DatasetPath,DatasetName));
 
 SavePath='C:\Users\stefa\Desktop\Stez - Work\Torino2021_Postdoc\Projects\MSCA_2023\Behaviour\Analysed';
-SaveFileName='CAVCre_DREADD_Multi_vs_Uni.mat';
+SaveFileName='Multi_vs_Uni_NeutralOdor_20251025.mat';
 
 %Remove animals not to be included
 DATATABLE(DATATABLE.TOINCLUDE==0,:)=[];
 
 %Define the time intervals to be used for occupancy analysis
-Interval=20; %Define time in seconds
+Interval=60; %Define time in seconds
 MaxTime=600; %Define the maximum time
 TimeIntervals=0:Interval:MaxTime;
 FilterCycle=0; %Set at 1 if you want to filter dataset based on female estrous cycle
-FilterCondition=1; %Set at 1 if you want to filter based on treatment condition (i.e. with dreadd vs mcherry)
+FilterCondition=0; %Set at 1 if you want to filter based on treatment condition (i.e. with dreadd vs mcherry)
 Condition='MCHERRY'; %Set DREADD or MCHERRY to filter mice based on condition
 ToKeep='ESTRO';
-SelectNose=1; %Set at 1 if you want to use the nose point as centroid to evaluate time spent
+SelectNose=0; %Set at 1 if you want to use the nose point as centroid to evaluate time spent
 
 Include_Syllables=0; %Set at 1 if you want to analyse the songs of males and align with the behaviour. This is for experiments with individual as stimuli
 Audio_Duration=300; %Put here the time of the audio file used for Syllable detection (Set it equal for all animals)
@@ -153,6 +153,9 @@ for thisanimal=1:size(DATATABLE,1)
         if iscell(Multimodal)
             Unimodal=str2double(Unimodal);
             Multimodal=str2double(Multimodal);
+        end
+
+        if iscell(Zone1)
             Zone1=str2double(Zone1);
         end
         
@@ -445,7 +448,7 @@ end
 
 %% Split and plot data based on animal cycle
 %We do this only for one time interval
-TimeSlot=600;
+TimeSlot=300;
 TimeInterval_idx=max(find(TimeIntervals<TimeSlot));
 
 All_Animals_Multi=AllMultimodal_Zone_cumulative(:,TimeInterval_idx);
